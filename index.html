@@ -18,7 +18,9 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #ededed;
             color: #111;
+            /* 适配移动端动态底部状态栏 */
             height: 100vh;
+            height: 100dvh; 
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -58,7 +60,8 @@
             flex: 1;
             margin-top: 44px;
             margin-bottom: 55px;
-            padding: 15px 12px;
+            /* 增加底部 padding，让最后一条消息不会贴在最底部，预留出手机小白条位置 */
+            padding: 15px 12px 40px 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -82,7 +85,6 @@
             }
         }
 
-        /* 优化头像尺寸：放大到 50px */
         .avatar {
             width: 70px;
             height: 70px;
@@ -96,7 +98,7 @@
         .message-content-group {
             display: flex;
             flex-direction: column;
-            max-width: 75%; /* 增加在手机端的宽度占比 */
+            max-width: 75%; 
         }
 
         .nickname {
@@ -122,7 +124,6 @@
             align-items: center;
             cursor: pointer;
             position: relative;
-            /* 语音条基础宽度变长，最大可根据屏幕自适应 */
             min-width: 80px; 
             max-width: 100%;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -180,18 +181,12 @@
             position: relative;
             font-size: 16px;
             line-height: 1.5;
-            
-            /* 内容太长时自动换行，并允许气泡内部上下滑动 */
             word-wrap: break-word;
             word-break: break-all;
             white-space: pre-wrap; 
-            max-height: 60vh;
-            overflow-y: auto;
-            
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        /* 文本气泡左侧的小三角 */
         .text-bubble::after {
             content: "";
             position: absolute;
@@ -219,7 +214,7 @@
             opacity: 0.6;
         }
 
-        /* 转出的文字区域 */
+        /* 转出的文字区域 - 无额外滑动冲突 */
         .transcribed-text {
             margin-top: 6px;
             font-size: 15px;
@@ -229,25 +224,10 @@
             border-radius: 6px;
             border: 1px solid #e5e5e5;
             display: none;
-            
-            /* 同样适配内容过长的滑动限制 */
             line-height: 1.5;
             word-wrap: break-word;
             word-break: break-all;
             white-space: pre-wrap;
-            max-height: 50vh;
-            overflow-y: auto;
-        }
-
-        /* 打字机光标动画 */
-        .typing-cursor::after {
-            content: "|";
-            animation: blink 0.8s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
         }
 
         /* 底部输入栏 */
@@ -282,7 +262,6 @@
 </head>
 <body>
 
-    <!-- 微信顶部导航 -->
     <div class="wx-header">
         <div class="left">
             <i class="fa-solid fa-angle-left"></i>
@@ -294,19 +273,16 @@
         </div>
     </div>
 
-    <!-- 聊天记录区域 -->
     <div class="chat-container" id="chatContainer">
-        <!-- 动态生成的群聊消息会插入到这里 -->
+        <!-- 动态生成的消息 -->
     </div>
 
-    <!-- 底部微信输入框伪装 -->
     <div class="wx-footer">
         <i class="fa-regular fa-face-smile"></i>
         <div class="input-box"></div>
         <i class="fa-regular fa-square-plus"></i>
     </div>
 
-    <!-- 音频播放器载体 -->
     <audio id="audioPlayer"></audio>
 
     <script>
@@ -364,7 +340,6 @@
         
         let currentPlayingBubble = null;
 
-        // 逐条依次加载消息
         function loadMessages() {
             chatData.forEach((item, index) => {
                 setTimeout(() => {
@@ -374,9 +349,7 @@
                     let messageBodyHtml = '';
 
                     if (item.type === 'voice') {
-                        // 提取出数字时长，例如 "13''" -> 13
                         const durationSec = parseInt(item.duration) || 2;
-                        // 动态计算语音条长度：基础长度100 + 每秒增加的长度，最大不超过手机屏幕
                         const dynamicWidth = Math.min(260, 100 + durationSec * 6);
 
                         messageBodyHtml = `
@@ -408,16 +381,14 @@
                     chatContainer.appendChild(row);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-                    // 绑定事件（只有语音消息才需要绑定播放和转文字事件）
                     if (item.type === 'voice') {
                         initMessageEvents(row);
                     }
 
-                }, index * 1000); // 每隔 1 秒依次出现一条
+                }, index * 1000); 
             });
         }
 
-        // 为新生成的语音元素绑定点击事件
         function initMessageEvents(row) {
             const bubble = row.querySelector('.voice-bubble');
             const toTextBtn = row.querySelector('.to-text-btn');
@@ -427,7 +398,7 @@
 
             const audioUrl = bubble.getAttribute('data-audio');
 
-            // 1. 点击语音气泡播放/暂停
+            // 1. 点击播放/暂停
             bubble.addEventListener('click', () => {
                 if (currentPlayingBubble === bubble) {
                     audioPlayer.pause();
@@ -438,7 +409,7 @@
                         currentPlayingBubble.classList.remove('playing');
                     }
                     audioPlayer.src = audioUrl;
-                    audioPlayer.play().catch(e => console.log("自动播放限制，请手动点击", e));
+                    audioPlayer.play().catch(e => console.log("请手动点击", e));
                     bubble.classList.add('playing');
                     currentPlayingBubble = bubble;
                 }
@@ -451,42 +422,30 @@
                 }
             });
 
-            // 2. 点击转文字按钮
-            let isTyping = false;
+            // 2. 点击转文字
             toTextBtn.addEventListener('click', () => {
+                // 如果当前是展开状态，则隐藏
                 if (transcribedBox.style.display === 'block') {
                     transcribedBox.style.display = 'none';
-                    transcribedBox.innerHTML = '';
-                    isTyping = false;
+                    transcribedBox.textContent = ''; // 清空内容
                     return;
                 }
 
-                transcribedBox.style.display = 'block';
+                // 否则，直接显示全文
                 const fullText = transcribedBox.getAttribute('data-text');
-                transcribedBox.innerHTML = '';
-                transcribedBox.classList.add('typing-cursor');
+                transcribedBox.style.display = 'block';
+                transcribedBox.textContent = fullText;
                 
-                let charIndex = 0;
-                isTyping = true;
-
-                function typeWriter() {
-                    if (!isTyping) return;
-                    if (charIndex < fullText.length) {
-                        transcribedBox.innerHTML = fullText.substring(0, charIndex + 1);
-                        charIndex++;
-                        chatContainer.scrollTop = chatContainer.scrollHeight; 
-                        setTimeout(typeWriter, 60); 
-                    } else {
-                        transcribedBox.classList.remove('typing-cursor');
-                        isTyping = false;
-                    }
-                }
-
-                typeWriter();
+                // 平滑滚动到底部，确保内容进入可视区（仅滚动一次）
+                setTimeout(() => {
+                    chatContainer.scrollTo({
+                        top: chatContainer.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 50);
             });
         }
 
-        // 页面加载完成后启动
         window.onload = () => {
             loadMessages();
         };
